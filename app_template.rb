@@ -2,10 +2,10 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-REPO = 'Iwark/rails7_ecs_template'.freeze
+REPO = 'Iwark/rails8_ecs_template'.freeze
 
 def get_github_directory_contents(path)
-  url = if path.start_with?('/') 
+  url = if path.start_with?('/')
           URI.parse("https://api.github.com#{path}")
         else
           URI.parse("https://api.github.com/repos/#{REPO}/contents/#{path}")
@@ -28,7 +28,7 @@ def get_github_directory_contents(path)
   end
 end
 
-def fetch_dir(path, local_dir=nil)
+def fetch_dir(path, local_dir = nil)
   local_dir ||= path
   path = "files/#{path}" unless path.start_with?('files/')
   FileUtils.mkdir_p(local_dir)
@@ -60,24 +60,24 @@ fetch_file('gitignore', '.gitignore')
 
 # CI/CD (github action)
 fetch_dir('github/', '.github/')
-gsub_file ".github/workflows/deploy.yml", /myapp/, @app_name
+gsub_file '.github/workflows/deploy.yml', /myapp/, @app_name
 
 # docker
 fetch_file('Dockerfile')
 fetch_file('compose.yaml')
 fetch_file('Procfile.dev')
 
-@db_port = ask("Port for dev Postgres server (default: 5433)") || '5433'
-@redis_port = ask("Port for dev Redis server (default: 6380)") || '6380'
-@web_dev_port = ask("Port for Web dev server (default: 3000)") || '3000'
-@chrome_port = ask("Port for Chrome server (default: 3300)") || '3300'
+@db_port = ask('Port for dev Postgres server (default: 5433)') || '5433'
+@redis_port = ask('Port for dev Redis server (default: 6380)') || '6380'
+@web_dev_port = ask('Port for Web dev server (default: 3000)') || '3000'
+@chrome_port = ask('Port for Chrome server (default: 3300)') || '3300'
 
-gsub_file "compose.yaml", '$DB_PORT', @db_port
-gsub_file "compose.yaml", '$REDIS_PORT', @redis_port
-gsub_file "compose.yaml", '$WEB_DEV_PORT', @web_dev_port
-gsub_file "compose.yaml", '$CHROME_PORT', @chrome_port
+gsub_file 'compose.yaml', '$DB_PORT', @db_port
+gsub_file 'compose.yaml', '$REDIS_PORT', @redis_port
+gsub_file 'compose.yaml', '$WEB_DEV_PORT', @web_dev_port
+gsub_file 'compose.yaml', '$CHROME_PORT', @chrome_port
 
-gsub_file "Procfile.dev", '$WEB_DEV_PORT', @web_dev_port
+gsub_file 'Procfile.dev', '$WEB_DEV_PORT', @web_dev_port
 
 # Set database config to use postgresql
 fetch_file('config/database.yml.example', 'config/database.yml')
@@ -109,11 +109,12 @@ run 'bundle install --path vendor/bundle --jobs=4'
 run 'docker compose run --rm web bundle install'
 
 # Fix pesky hangtime
-run "bundle exec spring stop"
+run 'bundle exec spring stop'
 
 # Devise
 run 'bundle exec rails g devise:install'
-gsub_file "config/initializers/devise.rb", /'please-change-me-at-config-initializers-devise@example.com'/, "\"no-reply@\#{ENV.fetch('APP_DOMAIN', 'dev.localhost')}\""
+gsub_file 'config/initializers/devise.rb', /'please-change-me-at-config-initializers-devise@example.com'/,
+          "\"no-reply@\#{Settings.app_domain}\""
 
 # set up db
 run 'docker compose run --rm web bundle exec rails db:create'
@@ -122,18 +123,18 @@ run 'docker compose run --rm web bundle exec rails db:create'
 run 'bundle exec rails g annotate:install'
 
 # set config/application.rb
-application  do
+application do
   %q{
     # Set timezone
     config.time_zone = 'Tokyo'
     config.active_record.default_timezone = :local
-    
+
     # i18n default to japanese
     I18n.available_locales = %i[en ja]
     I18n.enforce_available_locales = true
     config.i18n.load_path += Dir[Rails.root.join('config', 'locales', '**', '*.{rb,yml}').to_s]
     config.i18n.default_locale = :ja
-    
+
     # generator settings
     config.generators do |g|
       g.orm :active_record
@@ -168,7 +169,7 @@ application  do
 end
 
 # For Bullet (N+1 Problem)
-insert_into_file 'config/environments/development.rb',%(
+insert_into_file 'config/environments/development.rb', %(
 
   # Config for bullet
   config.after_initialize do
@@ -179,34 +180,38 @@ insert_into_file 'config/environments/development.rb',%(
     Bullet.rails_logger = true # log to rails log
   end
 
-  config.hosts << ENV.fetch('APP_DOMAIN', 'dev.localhost')
+  config.hosts << Settings.app_domain
+  config.hosts << ".#{Settings.app_domain}"
+
   config.web_console.permissions = '0.0.0.0/0'
 ), after: 'config.assets.quiet = true'
 
 # Default url options for test
 insert_into_file 'config/environments/test.rb', %(
-  config.action_mailer.default_url_options = { host: ENV.fetch('APP_DOMAIN', 'dev.localhost'), port: #{@web_dev_port} }
+  config.action_mailer.default_url_options = { host: Settings.app_domain, port: #{@web_dev_port} }
 ), after: 'config.action_mailer.delivery_method = :test'
-gsub_file "config/environments/test.rb", 'config.eager_load = false', 'config.eager_load = ENV["CI"].present?'
+gsub_file 'config/environments/test.rb', 'config.eager_load = false', 'config.eager_load = ENV["CI"].present?'
 
 # Letter opener
-insert_into_file 'config/environments/development.rb',%(
-  
-  config.action_mailer.default_url_options = { host: ENV.fetch('APP_DOMAIN', 'dev.localhost'), port: #{@web_dev_port} }
+insert_into_file 'config/environments/development.rb', %(
+
+  config.action_mailer.default_url_options = { host: Settings.app_domain, port: #{@web_dev_port} }
   config.action_mailer.delivery_method = :letter_opener_web
 ), after: 'config.action_mailer.perform_caching = false'
 
 # SES
-insert_into_file 'config/environments/production.rb',%(
+insert_into_file 'config/environments/production.rb', %(
   config.action_mailer.default_url_options = {
     protocol: 'https',
-    host: ENV.fetch('APP_DOMAIN'),
+    host: Settings.app_domain,
   }
   config.action_mailer.delivery_method = :ses
 ), after: 'config.action_mailer.perform_caching = false'
-gsub_file "config/environments/production.rb", 'config.active_storage.service = :local', 'config.active_storage.service = :amazon'
-gsub_file "config/environments/production.rb", '# config.cache_store = :mem_cache_store', "config.cache_store = :redis_cache_store, { url: ENV['REDIS_URL'] }"
-gsub_file "config/environments/production.rb", 'config.force_ssl = true', '# config.force_ssl = true'
+gsub_file 'config/environments/production.rb', 'config.active_storage.service = :local',
+          'config.active_storage.service = :amazon'
+gsub_file 'config/environments/production.rb', '# config.cache_store = :mem_cache_store',
+          "config.cache_store = :redis_cache_store, { url: ENV['REDIS_URL'] }"
+gsub_file 'config/environments/production.rb', 'config.force_ssl = true', '# config.force_ssl = true'
 
 # irbrc
 fetch_file('irbrc', '.irbrc')
@@ -226,7 +231,7 @@ fetch_file('spec/system_helper.rb')
 fetch_dir('spec/validators/')
 fetch_dir('spec/system/support/')
 fetch_dir('spec/support/')
-gsub_file "spec/system/support/cuprite_setup.rb", '$CHROME_PORT', @chrome_port
+gsub_file 'spec/system/support/cuprite_setup.rb', '$CHROME_PORT', @chrome_port
 
 remove_file 'test'
 
@@ -234,15 +239,12 @@ fetch_dir('config/locales/')
 remove_file 'config/locales/en.yml'
 
 # Lookbook
-insert_into_file 'config/routes.rb',%(
+insert_into_file 'config/routes.rb', %(
   mount Lookbook::Engine, at: "/lookbook" unless Rails.env.production?
 ), after: 'Rails.application.routes.draw do'
 
 # Guard
 fetch_file('Guardfile')
-
-# AWS
-fetch_file('config/initializers/aws.rb')
 
 # lograge
 fetch_file('config/initializers/lograge.rb')
@@ -272,7 +274,6 @@ run 'touch db/seeds/.keep'
 fetch_file('lib/tasks/refresh_seeds.rake')
 
 after_bundle do
-
   # javascripts & importmap
   fetch_file('app/assets/config/manifest.js')
   fetch_file('app/javascript/controllers/index.js')

@@ -1,7 +1,6 @@
-version: "3.9"
 services:
   db:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_PASSWORD: admin_pass
@@ -29,7 +28,6 @@ services:
     build: ./
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec foreman start -f Procfile.dev"
     environment:
-      APP_DOMAIN: localhost.scvl.jp
       TEST_DATABASE_URL: postgres://myuser:admin_pass@db:$DB_PORT/mydb_test
       DATABASE_URL: postgres://myuser:admin_pass@db:$DB_PORT/mydb
       RAILS_ENV: development
@@ -37,11 +35,12 @@ services:
       RAILS_MAX_THREADS: 5
       REDIS_URL: redis://redis:$REDIS_PORT/0
       BUNDLE_PATH: /app/vendor/bundle
-      BUNDLE_WITHOUT:
+      BUNDLE_WITHOUT: production:staging
       CHROME_URL: http://chrome:$CHROME_PORT
     volumes:
       - ./:/app
       - ./vendor/bundle:/app/vendor/bundle
+      - ./vendor/javascript:/app/vendor/javascript
       # exclude volumes
       - /app/vendor
       - /app/tmp
