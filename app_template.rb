@@ -96,8 +96,6 @@ insert_into_file 'app/views/layouts/application.html.erb', %(
 run 'mkdir app/assets/builds'
 run 'touch app/assets/builds/.keep'
 
-fetch_file('app/assets/config/manifest.js')
-
 #####
 # Install gems
 #####
@@ -108,7 +106,6 @@ run 'bundle lock --add-platform arm64-darwin-23'
 run 'bundle lock --add-platform x86_64-linux'
 run 'bundle lock --add-platform x86_64-linux-musl'
 run 'bundle install --path vendor/bundle --jobs=4'
-run 'docker compose run --rm web bundle install'
 
 # Fix pesky hangtime
 run 'bundle exec spring stop'
@@ -117,9 +114,6 @@ run 'bundle exec spring stop'
 run 'bundle exec rails g devise:install'
 gsub_file 'config/initializers/devise.rb', /'please-change-me-at-config-initializers-devise@example.com'/,
           "\"no-reply@\#{Settings.app_domain}\""
-
-# set up db
-run 'docker compose run --rm web bundle exec rails db:create'
 
 # annotate gem
 run 'bundle exec rails g annotate:install'
@@ -277,6 +271,7 @@ fetch_file('lib/tasks/refresh_seeds.rake')
 
 after_bundle do
   # javascripts & importmap
+  fetch_file('app/assets/config/manifest.js')
   fetch_file('app/javascript/controllers/index.js')
   fetch_file('app/javascript/application.js')
 
@@ -291,6 +286,10 @@ after_bundle do
 
   # rubocop
   run 'bundle exec rubocop -A'
+
+  # set up docker
+  run 'docker compose run --rm web bundle install'
+  run 'docker compose run --rm web bundle exec rails db:create'
 
   # git
   git :init
