@@ -96,6 +96,8 @@ insert_into_file 'app/views/layouts/application.html.erb', %(
 run 'mkdir app/assets/builds'
 run 'touch app/assets/builds/.keep'
 
+fetch_file('app/assets/config/manifest.js')
+
 #####
 # Install gems
 #####
@@ -275,7 +277,6 @@ fetch_file('lib/tasks/refresh_seeds.rake')
 
 after_bundle do
   # javascripts & importmap
-  fetch_file('app/assets/config/manifest.js')
   fetch_file('app/javascript/controllers/index.js')
   fetch_file('app/javascript/application.js')
 
