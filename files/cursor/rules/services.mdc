@@ -1,0 +1,66 @@
+---
+description:
+globs: app/services/**/*
+alwaysApply: false
+---
+
+# Service Objects
+
+## Directory Structure
+
+- All service objects are in `app/services/`
+- Organize domain-specific services in subdirectories (examples):
+  ```
+  services/
+  ├── users/
+  │   ├── create_user_service.rb
+  │   └── update_user_service.rb
+  ├── articles/
+  │   ├── publish_article_service.rb
+  │   └── unpublish_article_service.rb
+  └── notifications/
+      ├── send_email_service.rb
+      └── send_push_notification_service.rb
+  ```
+
+## Naming Convention
+
+- Name services with a verb followed by "Service"
+  - Examples: `CreateUserService`, `GenerateReportService`
+- Use clear, action-oriented names that describe what the service does
+
+## Implementation Pattern
+
+- Each service should have a single public method (usually `#call`)
+- Use this basic structure:
+
+  ```ruby
+  # app/services/create_user_service.rb
+  class CreateUserService
+    def call(name:)
+      # Implementation
+    end
+
+    private
+    # Private methods
+  end
+  ```
+
+## Service Usage Examples
+
+```ruby
+CreateUserService.new.call(name: 'Taro Yamada')
+```
+
+## Best Practices
+
+- Keep services focused on a single business operation
+- Document service interface and expected parameters
+- Use dependency injection for testability
+- Include comprehensive error handling
+- Write thorough tests for all success and failure paths
+- Keep services stateless when possible
+- Use transactions for database operations that need atomicity
+- Don't create service objects for simple CRUD operations
+- Follow the existing naming patterns in the project
+- Consider using service objects for complex business rules and calculations

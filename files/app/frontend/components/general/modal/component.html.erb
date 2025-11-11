@@ -1,0 +1,27 @@
+<%= tag.div(
+  class: 'fixed inset-0 z-40 flex items-center justify-center p-4 overflow-hidden text-center bg-gray-900 bg-opacity-70 backdrop-blur',
+  role: 'dialog',
+  'aria-modal': 'true',
+  data: {
+    controller: controller_id,
+    "#{controller_id}-close-on-esc-value": @close_on_esc,
+    bs_focus: false # allow slim-select to work within the modal cf. https://stackoverflow.com/a/76522777
+  }
+) do %>
+  <div class="absolute w-full <%= size_class %> max-h-[90%] rounded-xl bg-white p-6 overflow-auto">
+    <%= content %>
+    <% if @show_close_button %>
+      <div class="flex flex-col justify-center items-center mt-6 w-full">
+        <%= render General::Button::Component.new(
+          class: 'w-48',
+          size: :lg,
+          hierarchy: :secondary,
+          type: :button,
+          data: {
+            action: "#{controller_id}#close",
+          }
+        ).with_content(t('.close')) %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

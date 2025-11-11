@@ -9,10 +9,12 @@ min_threads_count = ENV.fetch("RAILS_MIN_THREADS") { max_threads_count }
 threads min_threads_count, max_threads_count
 
 # Specifies that the worker count should equal the number of processors in production.
-if ENV["RAILS_ENV"] == "production"
+if ENV["RAILS_ENV"] == "staging" || ENV["RAILS_ENV"] == "production"
   require "concurrent-ruby"
   worker_count = Integer(ENV.fetch("WEB_CONCURRENCY") { Concurrent.physical_processor_count })
   workers worker_count if worker_count > 1
+else
+  workers 1
 end
 
 # Specifies the `worker_timeout` threshold that Puma will use to wait before
@@ -43,7 +45,7 @@ preload_app!
 plugin :tmp_restart
 
 x = nil
-on_worker_boot do
+before_worker_boot do
   x = Sidekiq.configure_embed do |config|
     config.queues = %w[critical default low]
     config.concurrency = 1
@@ -51,6 +53,6 @@ on_worker_boot do
   x.run
 end
 
-on_worker_shutdown do
+before_worker_shutdown do
   x&.stop
 end

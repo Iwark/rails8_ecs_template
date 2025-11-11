@@ -14,13 +14,13 @@ Sentry.init do |config|
       when '/up'
         0.0
       else
-        1.0
+        0.5
       end
     when /sidekiq/
-      0.5
+      0.1
     else
-      1.0
+      0.5
     end
   end
-  config.profiles_sample_rate = 1.0
+  config.profiles_sample_rate = 0.1
 end

@@ -37,6 +37,7 @@ services:
       BUNDLE_PATH: /app/vendor/bundle
       BUNDLE_WITHOUT: production:staging
       CHROME_URL: http://chrome:$CHROME_PORT
+      TZ: Asia/Tokyo
     volumes:
       - ./:/app
       - ./vendor/bundle:/app/vendor/bundle

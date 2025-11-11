@@ -1,0 +1,7 @@
+---
+en:
+  general:
+    input:
+      label:
+        component:
+          optional: Optional

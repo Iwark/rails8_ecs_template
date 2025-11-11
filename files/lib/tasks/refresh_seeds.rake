@@ -9,7 +9,7 @@ namespace :seeds do
     raise 'model_name is required' if model_name.blank?
 
     file_name = model_name.underscore.pluralize
-    seed_file = Dir[Rails.root.join("db/seeds/**/*-#{file_name}.yml")].first
+    seed_file = Rails.root.glob("db/seeds/**/*-#{file_name}.yml").first
     raise 'seed file for the model is not found' if seed_file.nil?
 
     target_model = model_name.classify.constantize

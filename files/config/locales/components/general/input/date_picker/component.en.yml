@@ -1,0 +1,8 @@
+---
+en:
+  general:
+    input:
+      date_picker:
+        component:
+          alt_format: B d, Y
+          date_format: Y-m-d

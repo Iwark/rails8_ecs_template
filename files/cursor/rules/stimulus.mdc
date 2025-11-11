@@ -1,0 +1,60 @@
+---
+description: Best practices for Stimulus.js usage
+globs: app/**/*.js
+alwaysApply: false
+---
+# Controller Organization
+- Place component-specific controllers in the same directory as the component
+  - Name the file as `{component}_controller.js`
+  - Keep the controller focused on the component's behavior
+- Place shared/global controllers in app/javascript/controllers/
+  - Use for functionality that spans multiple components
+  - Keep the number of global controllers minimal
+
+# Controller Implementation
+- Use static getters for targets and values for broader browser compatibility
+  ```javascript
+  // Prefer this syntax for broader browser support
+  static get targets() {
+    return ['element1', 'element2']
+  }
+  static get values() {
+    return {
+      config: String,
+      count: Number
+    }
+  }
+
+  // Instead of class fields syntax
+  // static targets = ['element1', 'element2']
+  // static values = {
+  //   config: String,
+  //   count: Number
+  // }
+  ```
+- Prefer data-targets over query selectors
+- Keep controllers focused on DOM manipulation and event handling
+- Implement proper error handling with Sentry integration
+- Use meaningful names for methods and event handlers
+- Use private class methods with `#` prefix (ECMAScript 2022)
+- Use query selectors only when necessary
+  - When targeting dynamic elements not suitable for data-targets
+  - When working with third-party libraries that require selectors
+  - When dealing with complex DOM traversal that can't be solved with targets
+
+# Events and Lifecycle
+- Utilize Stimulus lifecycle methods appropriately
+  - `initialize()`: for setup that doesn't require DOM
+  - `connect()`: for DOM-dependent initialization
+  - `disconnect()`: for cleanup
+- Handle events using descriptive method names
+- Use event delegation when appropriate
+
+# Best Practices
+- Use `data` attributes for configuration
+- Implement complex business logics in `app/javascript/services`
+- Use proper type annotations for values
+- Document complex interactions
+- Follow consistent error handling patterns
+- Use proper event handling and prevention
+- Implement proper state management

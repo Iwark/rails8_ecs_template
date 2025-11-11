@@ -1,0 +1,6 @@
+---
+en:
+  general:
+    input:
+      component:
+        select_placeholder: Please select

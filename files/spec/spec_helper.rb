@@ -22,13 +22,37 @@ SimpleCov.start do
 
   add_group 'Controllers', 'app/controllers'
   add_group 'Components', 'app/components'
+  add_group 'Forms', 'app/forms'
   add_group 'Models', 'app/models'
+  add_group 'Services', 'app/services'
   add_group 'Helpers', 'app/helpers'
   add_group 'Libraries', 'lib'
+
+  # Configure for parallel tests
+  merge_timeout 600 # 10 minutes to collect coverage from all parallel processes
+
+  # Set command name with process identifier for parallel tests
+  test_env_number = ENV['TEST_ENV_NUMBER'].to_i
+  if test_env_number.positive?
+    command_name "RSpec-#{test_env_number}"
+  else
+    command_name 'RSpec'
+  end
 end
 
 require 'simplecov-cobertura'
-SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
+
+# Configure formatter based on environment
+if ENV['CI']
+  # In CI, use Cobertura formatter for Codecov
+  SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
+else
+  # Local development: use both HTML and Cobertura
+  SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
+                                                                    SimpleCov::Formatter::HTMLFormatter,
+                                                                    SimpleCov::Formatter::CoberturaFormatter
+                                                                  ])
+end
 
 require 'capybara/rspec'
 

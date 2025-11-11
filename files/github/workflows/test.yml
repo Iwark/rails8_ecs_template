@@ -17,7 +17,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-4core-arm64
     strategy:
       matrix:
         database-name:
@@ -30,6 +30,9 @@ jobs:
           - 127.0.0.1
         database-port:
           - 5432
+    env:
+      RAILS_ENV: test
+      TEST_DATABASE_URL: postgres://${{ matrix.database-user }}:${{ matrix.database-password }}@${{ matrix.database-host }}:${{ matrix.database-port }}/${{ matrix.database-name }}
     services:
       postgres:
         image: postgres:16
@@ -40,28 +43,55 @@ jobs:
           POSTGRES_USER: ${{ matrix.database-user }}
           POSTGRES_PASSWORD: ${{ matrix.database-password }}
         options: --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 3
+      chrome:
+        image: browserless/chrome:latest
+        ports:
+          - 3311:3311
+        env:
+          PORT: 3311
+          CONNECTION_TIMEOUT: 600000
+        options: --health-cmd "curl -f http://localhost:3311 || exit 1"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 3
     steps:
       - name: Check out Git Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Cache and install APT packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libpq-dev
+          version: 1.0
 
       - name: Set up Ruby, Bundler and Rails
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
 
-      - name: Run test
-        env:
-          RAILS_ENV: test
-          TEST_DATABASE_URL: postgres://${{ matrix.database-user }}:${{ matrix.database-password }}@${{ matrix.database-host }}:${{ matrix.database-port }}/${{ matrix.database-name }}
+      - name: Prepare test environment
         run: |
-          bundle exec rails assets:precompile
           bundle exec rails db:test:prepare
-          bundle exec rspec --exclude-pattern "spec/system/**/*_spec.rb"
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Run all tests
+        run: |
+          bundle exec rails parallel:spec_full
+        env:
+          CHROME_URL: http://localhost:3311
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: capybara-screenshots
+          path: tmp/capybara

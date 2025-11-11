@@ -12,20 +12,22 @@ env:
 
 jobs:
   deploy:
-    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    runs-on: ubuntu-24.04-4core-arm64
     permissions:
       id-token: write
       contents: read
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ env.HEAD_SHA }}
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/arm64
 
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -34,7 +36,9 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: "false"
 
       - name: Cache Docker layers
         uses: actions/cache@v3
@@ -45,7 +49,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Build bundle stage
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: .
           target: bundle
@@ -53,13 +57,15 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache-new/bundle
 
       - name: Build and Push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           context: .
+          platforms: ${{ steps.buildx.outputs.platforms }}
           build-args: |
             SHA=${{ env.HEAD_SHA }}
+            DEBUG=true
           tags: |
             ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, env.ECR_REPOSITORY, env.HEAD_SHA) }}
             ${{ format('{0}/{1}:{2}', steps.login-ecr.outputs.registry, env.ECR_REPOSITORY, 'latest') }}

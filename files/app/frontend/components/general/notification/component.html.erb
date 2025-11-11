@@ -1,0 +1,42 @@
+<%= tag.div(
+  class: 'w-full max-w-[520px] mb-4 rounded-lg shadow-lg pointer-events-auto animate-fade-in-left',
+  data: { 
+    controller: controller_id,
+    "#{controller_id}-timeout-value": timeout_value,
+    "#{controller_id}-message-value": @message,
+    "#{controller_id}-sub-message-value": @sub_message,
+    "#{controller_id}-detail-list-value": @detail_list.is_a?(Array) ? @detail_list.to_json : @detail_list
+  }
+) do %>
+  <div class="overflow-hidden relative py-3 pr-7 pl-4 bg-gray-800 rounded-xl shadow-lg">
+    <div class="flex gap-1 items-start">
+      <div class="flex flex-1 gap-2 items-start p-3 pr-0">
+        <div class="flex-shrink-0">
+          <%= icon %>
+        </div>
+        <div class="flex flex-col flex-1 gap-3">
+          <div class="font-semibold leading-6 text-white" data-<%= controller_id %>-target="message"></div>
+          <div class="text-sm font-normal text-white" data-<%= controller_id %>-target="subMessage"></div>
+          <div data-<%= controller_id %>-target="detailList"></div>
+        </div>
+      </div>
+      <% if timeout_value.zero? %>
+        <div class="py-1">
+          <a href="#" class="block p-2 w-10 h-10 hover:cursor-pointer" data-action="click-><%= controller_id %>#removeNotification">
+            <%= inline_svg_tag('icons/x.svg', class: 'w-6 h-6 text-white') %>
+          </a>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <template data-<%= controller_id %>-target="detailListItemTemplate">
+    <div class="flex gap-6 justify-between">
+      <div class="flex-1 min-w-0">
+        <div class="text-sm text-white truncate">$key</div>
+      </div>
+      <div class="flex-shrink-0">
+        <div class="text-sm text-gray-400">$value</div>
+      </div>
+    </div>
+  </template>
+<% end %>

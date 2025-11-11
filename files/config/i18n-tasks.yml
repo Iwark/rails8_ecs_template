@@ -17,7 +17,7 @@ data:
   read:
     - config/locales/%{locale}.yml
     - config/locales/**/*.%{locale}.yml
-    - app/components/**/*.yml
+    - app/frontend/components/**/*.yml
 
   # Locale files to write new keys to, based on a list of key pattern => file rules. Matched from top to bottom:
   # `i18n-tasks normalize -p` will force move the keys according to these rules
@@ -25,7 +25,7 @@ data:
     - ["{common, notice}.*", 'config/locales/\1.%{locale}.yml']
     - [
         "{activemodel, activerecord, enums}.*",
-        'config/locales/models/\1.%{locale}.yml',
+        "config/locales/models.%{locale}.yml",
       ]
     - [
         "{date, datetime, errors, helpers, number, time}.*",
@@ -33,6 +33,7 @@ data:
       ]
     ## Catch-all default:
     - config/locales/views.%{locale}.yml
+    - config/locales/controllers.%{locale}.yml
 
   # External locale data (e.g. gems).
   # This data is not considered unused and is never written to.
@@ -61,16 +62,18 @@ search:
   ## Paths or `File.find` patterns to search in:
   paths:
     # - app/
-    - app/components
+    - app/frontend/components
     - app/controllers
+    - app/forms
     - app/helpers
     - app/mailers
     - app/views
 
   ## Root directories for relative keys resolution.
   relative_roots:
-    - app/components
+    - app/frontend/components
     - app/controllers
+    - app/forms
     - app/helpers
     - app/mailers
     # - app/presenters
@@ -81,7 +84,7 @@ search:
   # Directories listed here will not consider the name of the method part of the resolved key
   #
   relative_exclude_method_name_paths:
-    - app/components
+    - app/frontend/components
 
   ## Files or `File.fnmatch` patterns to exclude from search. Some files are always excluded regardless of this setting:
   ##   %w(*.jpg *.png *.gif *.svg *.ico *.eot *.otf *.ttf *.woff *.woff2 *.pdf *.css *.sass *.scss *.less *.yml *.json)
@@ -89,7 +92,7 @@ search:
     - app/assets/images
     - app/assets/fonts
     - app/assets/videos
-    # - app/components
+    # - app/frontend/components
 
   ## Alternatively, the only files or `File.fnmatch patterns` to search in `paths`:
   ## If specified, this settings takes priority over `exclude`, but `exclude` still applies.
@@ -122,12 +125,16 @@ ignore_missing:
 ## Consider these keys used:
 ignore_unused:
   - "activemodel.attributes.*"
+  - "activemodel.errors.messages.*"
   - "activerecord.attributes.*"
   - "activerecord.errors.messages.*"
+  - "activerecord.errors.models.*"
   - "activerecord.models.*"
   - "common.*"
   - "devise.*"
+  - "doorkeeper.*"
   - "enums.*"
+  - "form_actions.*"
   - "date.*"
   - "datetime.*"
   - "errors.*"
@@ -162,4 +169,3 @@ ignore_inconsistent_interpolations:
 #
 # <%# I18n::Tasks.add_scanner 'I18n::Tasks::Scanners::PatternMapper',
 #       patterns: [['\bSpree\.t[( ]\s*%{key}', 'spree.%{key}']] %>
-

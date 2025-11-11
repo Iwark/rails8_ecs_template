@@ -1,0 +1,90 @@
+---
+description: 
+globs: app/controllers/*,app/controllers/admin/*
+alwaysApply: false
+---
+# Controllers
+
+## Directory Structure
+- Controller files are in `app/controllers/`
+- Use subdirectories for namespaced controllers:
+  ```
+  controllers/
+  ├── application_controller.rb
+  ├── users_controller.rb
+  ├── api/
+  │   ├── application_controller.rb
+  │   └── v1/
+  │       ├── users_controller.rb
+  │       └── posts_controller.rb
+  └── admin/
+      ├── application_controller.rb
+      └── users_controller.rb
+  ```
+
+## Implementation Pattern
+- Keep controllers skinny
+- Follow RESTful conventions
+- Use services for complex business logic
+- Use form objects for complex validations
+- Example:
+  ```ruby
+  class UsersController < ApplicationController
+    before_action :set_user, only: [:show, :edit, :update, :destroy]
+    
+    def index
+      @users = User.all
+    end
+    
+    def show
+    end
+    
+    def new
+      @form = UserForm.new(client: @client)
+    end
+    
+    def create
+      @form = UserForm.new(user_params, client: @client)
+      
+      if @form.save
+        redirect_to user_path(@form.resource), notice: 'User was successfully created.'
+      else
+        render :new
+      end
+    end
+    
+    def edit
+      @form = UserForm.new(user: @user, client: @client)
+    end
+    
+    def update
+      @form = UserForm.new(user_params, user: @user, client: @client)
+      
+      if @form.save
+        redirect_to user_path(@user), notice: 'User was successfully updated.'
+      else
+        render :edit
+      end
+    end
+    
+    def destroy
+      DestroyUserService.new(user: @user).call
+      redirect_to users_path, notice: 'User was successfully destroyed.'
+    end
+    
+    private
+    
+    def set_user
+      @user = User.find(params[:id])
+    end
+    
+    def user_params
+      params.expect(user: %i[family_name given_name username role])
+    end
+  end
+  ```
+
+## Parameter Handling
+- Use `params.expect` for type-safe parameter validation
+- Define expected parameter types explicitly
+- Use nested structures for complex parameters

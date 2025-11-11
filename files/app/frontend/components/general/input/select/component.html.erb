@@ -1,0 +1,39 @@
+<%= input_container(id: @options[:container_id], class: "#{@options[:class]} #{@attribute}", data: {
+  "#{controller_id}-placeholder-value": placeholder,
+  "#{controller_id}-include-blank-value": @options[:include_blank] || false,
+  "#{controller_id}-search-value": @options[:search],
+  "#{controller_id}-disabled-value": @options[:disabled],
+}) do %>
+  <%= label %>
+  <div class="flex relative items-center">
+    <%= select({
+      class: select_classes,
+      data: (@options[:data] || {}).merge({
+        "#{controller_id}-target": 'input',
+      }),
+      disabled: @options[:disabled],
+      required: @options[:required] || @validations.include?('presence'),
+      multiple: @options[:multiple]
+    }) %>
+  </div>
+  <% if hint? %>
+    <div class="flex gap-2 items-start mt-2.5">
+      <div class="p-1.5 bg-gray-200 rounded-full">
+        <%= inline_svg_tag('icons/info.svg', class: 'w-3 h-3 text-gray-600') %>
+      </div>
+      <div class="flex items-center text-sm text-gray-500 min-h-6">
+        <%= hint %>
+      </div>
+    </div>
+  <% elsif @options[:hint].present? %>
+    <div class="flex gap-2 items-start mt-2.5">
+      <div class="p-1.5 bg-gray-200 rounded-full">
+        <%= inline_svg_tag('icons/info.svg', class: 'w-3 h-3 text-gray-600') %>
+      </div>
+      <div class="flex items-center text-sm text-gray-500 min-h-6">
+        <%= simple_format(@options[:hint]) %>
+      </div>
+    </div>
+  <% end %>
+  <%= error_container %>
+<% end %>

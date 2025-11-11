@@ -1,0 +1,33 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Playwright Guidelines
+
+## Setup
+Install Playwright browsers if not already available:
+```bash
+npx playwright install
+```
+
+## Project-Specific Information
+
+### Login Form Elements
+- Username field: `input[name="user[username]"]`
+- Password field: `input[name="user[password]"]`
+- Submit button: `button[type="submit"]`
+
+### Test Accounts
+User credentials are defined in `db/seeds/021-users.yml`:
+- scoville_admin: `Sc0ville`
+- reccoo_admin: `Sc0ville`
+- trial_admin: `Sc0ville`
+- And other users with same password pattern
+
+### Login Success Detection
+Login success can be verified by checking if the current URL no longer contains `sign_in`.
+
+## Best Practices
+- Use `page.waitForTimeout(3000)` after form submission to allow navigation
+- Inspect page elements with `page.$$('input')` if selectors are unclear

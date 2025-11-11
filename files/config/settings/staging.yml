@@ -1,0 +1,2 @@
+app_domain: localhost
+app_host: "localhost:$WEB_DEV_PORT"

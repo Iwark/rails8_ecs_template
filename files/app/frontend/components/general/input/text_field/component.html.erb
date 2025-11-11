@@ -1,0 +1,72 @@
+<%= input_container(id: @options[:container_id], class: @options[:class], data: @options[:container_data]) do %>
+  <%= label %>
+  <div class="flex relative items-center">
+    <div class="flex w-full rounded-lg shadow-xs focus-within:shadow-xs-focused">
+      <%= text_field(
+        id_option.merge(value_option).merge({
+          autocomplete: @options[:autocomplete],
+          autocorrect: @options[:autocorrect],
+          autocapitalize: @options[:autocapitalize],
+          readonly: @options[:readonly],
+          disabled: @options[:disabled],
+          class: 'peer block z-0 rounded-lg ' \
+                'w-full min-h-[3rem] px-3.5 py-2.5 ' \
+                'bg-white appearance-none ' \
+                'border border-gray-300 ' \
+                'focus:outline-none ' \
+                '[&:not(:read-only)]:focus:border-brand-300 ' \
+                'disabled:opacity-60 ' \
+                'group-[.error]:border-error-300 group-[.warning]:border-warning-400 ' \
+                'read-only:bg-gray-50 ' \
+                "#{'rounded-r-none ' if @options[:add_on]}" \
+                "#{@options[:input_class]}",
+          data: merge_data({
+            "#{controller_id}-target": 'input',
+            action: [
+              "blur->#{controller_id}#validateNow",
+              "keydown->#{controller_id}#validateLater",
+              "input->#{controller_id}#validateLater",
+              "paste->#{controller_id}#validateLater"
+            ].join(' ')
+          }),
+          placeholder:,
+          type: @type,
+          required: false
+        })
+      ) %>
+      <% if @options[:add_on] %>
+        <div class="inline-flex items-center px-3 min-h-[3rem] text-sm text-gray-500 border border-l-0 border-gray-300 rounded-r-md bg-white">
+          <%= @options[:add_on] %>
+        </div>
+      <% end %>
+    </div>
+    <% if @options[:toggle_password_visibility] %>
+      <%= tag.div(
+        class: 'absolute flex z-0 top-0 right-0 bottom-0 items-center hover:cursor-pointer justify-center w-11 h-11 my-auto',
+        data: {
+          action: "click->#{controller_id}#togglePasswordVisibility"
+        }
+      ) do %>
+        <%= inline_svg_tag('icons/eye.svg') %>
+        <%= inline_svg_tag('icons/eye_off.svg', class: 'hidden') %>
+      <% end %>
+    <% elsif @options[:icon_right] %>
+      <%= inline_svg_tag(
+        "icons/#{@options[:icon_right]}.svg",
+        class: "absolute z-10 top-0 right-4 bottom-0 my-auto pointer-events-none #{@options[:icon_right_class]}",
+        data: @options[:icon_right_data]
+      ) %>
+    <% end %>
+  </div>
+  <% if hint? %>
+    <div class="flex gap-2 items-start mt-2.5">
+      <div class="p-1.5 bg-gray-200 rounded-full">
+        <%= inline_svg_tag('icons/info.svg', class: 'w-3 h-3 text-gray-600') %>
+      </div>
+      <div class="flex items-center text-sm text-gray-500 min-h-6">
+        <%= hint %>
+      </div>
+    </div>
+  <% end %>
+  <%= error_container %>
+<% end %>

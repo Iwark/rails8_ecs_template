@@ -1,0 +1,103 @@
+---
+description:
+globs: app/forms/**/*
+alwaysApply: false
+---
+
+# Form Objects
+
+## Directory Structure
+
+- All form objects are in `app/forms/`
+- Organize domain-specific forms in subdirectories:
+  ```
+  forms/
+  ├── admin/
+  │   ├── client_form.rb
+  │   └── ...
+  ├── application_form.rb
+  ├── user_form.rb
+  └── ...
+  ```
+
+## Implementation Pattern
+
+- Inherit from `ApplicationForm`
+- Define attributes explicitly
+- Example structure:
+
+  ```ruby
+  # app/forms/user_form.rb
+  class UserForm < ApplicationForm
+    attribute :email, :string
+    attribute :password, :string
+    attribute :name, :string
+
+    validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+    validates :password, presence: true, length: { minimum: 8 }
+    validates :name, presence: true
+
+    def initialize(attributes = nil, user: User.new)
+      @user = user
+      attributes = {}.merge(default_attributes, attributes || {})
+      super(attributes)
+    end
+
+    def resource
+      @user
+    end
+
+    def save
+      return false unless valid?
+
+      @user.update(attributes)
+    end
+  end
+  ```
+
+## Constructor Guidelines
+
+- The first argument of a form object constructor should be `attributes` (a hash).
+- The main resource (e.g., model instance) should be passed as a keyword argument (e.g., `user:`).
+- Any related resources (e.g., `client:`) should also be passed as keyword arguments as needed.
+- When editing/updating, merge the resource's current attributes with the given `attributes` to set initial values.
+
+## Form Usage
+
+- Example of controller usage:
+
+  ```ruby
+  def create
+    @form = UserForm.new(user_params)
+
+    if @form.save
+      redirect_to user_path(@form.resource), notice: 'User created successfully'
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def user_params
+    params.expect(user: %i[email password name])
+  end
+  ```
+
+## Best Practices
+
+- Keep validation logic in forms rather than models when form-specific
+- Implement proper error handling and messages
+- Keep forms focused on data validation and type coercion
+- Write comprehensive specs for form validations
+- Document form attributes and validation rules
+- Use strong parameters in controllers with forms
+- Consider virtual attributes for non-persisted data
+- Separate form validation from business logic
+
+## Caution
+
+**DO NOT modify these methods without explicit requirement:**
+
+- `default_attributes` - This method is already defined in the parent class (`ApplicationForm`)
+- `update(attributes)` - Use this method for both creating new records and updating existing ones

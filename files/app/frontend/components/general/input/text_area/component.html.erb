@@ -1,0 +1,33 @@
+<%= input_container(class: @options[:class], data: {
+  "#{controller_id}-max-length-value": max_length || 0,
+  "#{controller_id}-static-height-value": static_height?
+}) do %>
+  <%= label %>
+  <div class="flex relative items-center">
+    <div
+      class="<%= dummy_target_class %>"
+      aria-hidden="true"
+      <%= tag.attributes(data: { "#{controller_id}-target": 'dummy' }) %>>
+    </div>
+    <%= text_area(
+      class: 'absolute py-2.5 px-3.5 top-0 left-0 appearance-none ' \
+             'bg-white block w-full border border-gray-300 ' \
+             'rounded-lg placeholder-gray-500 shadow-xs resize-none ' \
+             'focus:outline-none focus:border-brand-300 focus:shadow-xs-focused ' \
+             'group-[.error]:!border-semantic-danger group-[.warning]:!border-warning-400 ' \
+             "#{static_height? ? 'h-full overflow-y-auto' : 'h-full overflow-hidden'}",
+      data: merge_data({
+        "#{controller_id}-target": 'input',
+        action: "#{controller_id}#update"
+      }),
+      disabled: @options[:disabled],
+      placeholder:,
+      rows: @options[:rows] || 3
+    ) %>
+  </div>
+  <%= tag.small(
+    class: 'hidden [&.active]:inline-block group-[.error]:!hidden w-full text-right text-gray-60',
+    "data-#{controller_id}-target": 'counter',
+  ) %>
+  <%= error_container %>
+<% end %>

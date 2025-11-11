@@ -1,0 +1,134 @@
+---
+description:
+globs: app/controllers/api/**/*,spec/requests/api/**/*,swagger/**/*
+alwaysApply: false
+---
+
+# API Architecture
+
+## API Variants (choose per project)
+
+- `Api::V1` - Versioned public/external APIs
+- `Api::Web` - Internal APIs used by Rails frontend JavaScript
+
+## Directory Structure
+
+- Controller files are in `app/controllers/api/`:
+  ```
+  controllers/api/
+  ├── v1/
+  │   ├── api_controller.rb
+  │   ├── users_controller.rb
+  │   ├── articles_controller.rb
+  │   └── sessions_controller.rb
+  └── web/
+      ├── web_controller.rb
+      └── ...
+  ```
+- Request specs are in `spec/requests/api/`:
+  ```
+  spec/requests/api/
+  ├── v1/
+  │   ├── users_spec.rb
+  │   ├── articles_spec.rb
+  │   └── sessions_spec.rb
+  └── web/
+      └── ...
+  ```
+
+## Implementation Pattern
+
+### Api::V1
+
+- RESTful API design
+- Consistent JSON format
+- Proper status codes
+- Authentication with Doorkeeper (OIDC)
+- API versioning in URL path
+- All controllers should inherit from `Api::V1::ApiController`
+
+- Controller implementation example:
+  ```ruby
+  # app/controllers/api/v1/users_controller.rb
+  module Api
+    module V1
+      class UsersController < Api::V1::ApiController
+        def me
+          user = current_resource_owner
+          render json: {
+            id: user.id,
+            name: user.name,
+            email: user.email
+          }
+        end
+      end
+    end
+  end
+  ```
+
+### Api::Web (Internal API)
+
+- For browser consumption
+- CSRF protection enabled
+- Session-based authentication (Devise)
+- May return HTML or JSON based on request
+- All controllers should inherit from `Api::Web::WebController`
+
+## API Documentation (optional with Rswag)
+
+- If using Rswag, document endpoints with RSpec and generate Swagger via `bin/rails rswag:all`
+- Do not manually modify files in `swagger/`; they are generated per environment
+- Example Request Spec:
+
+  ```ruby
+  # spec/requests/api/v1/users_spec.rb
+  require 'swagger_helper'
+
+  RSpec.describe 'Users API', openapi_spec: "#{ENV.fetch('RSWAG_ENV', 'development')}/v1/swagger.yaml" do
+    path '/api/v1/users/me' do
+      get 'Retrieve the current user information' do
+        tags 'Users'
+        produces 'application/json'
+
+        response '200', 'user found' do
+          schema type: :object,
+                 properties: {
+                   id: { type: :integer },
+                   name: { type: :string },
+                   email: { type: :string }
+                 },
+                 required: %w[id name email]
+
+          let(:user) { create(:user) }
+          let(:Authorization) { 'Bearer token' }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['id']).to eq(user.id)
+            expect(data['email']).to eq(user.email)
+          end
+        end
+
+        response '401', 'unauthorized' do
+          let(:Authorization) { nil }
+
+          # Define unauthorized response schema per project
+        end
+      end
+    end
+  end
+  ```
+
+## Best Practices
+
+- Implement proper error handling and consistent error responses
+- Use pagination for large data sets
+- Include authentication for all endpoints (except public ones)
+- Document all endpoints thoroughly with Rswag
+- Test all success and error cases
+- Keep API backward compatible
+- Use resource-oriented URLs
+
+## Future considerations
+
+- Implement rate limiting for external APIs

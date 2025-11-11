@@ -6,15 +6,15 @@ ja:
       send_instructions: 数分以内にメールアドレスの確認方法に関する手順が記載されたメールが届きます。
       send_paranoid_instructions: メールアドレスがデータベースに存在する場合、数分以内にメールアドレスの確認方法に関する手順が記載されたメールが届きます。
     failure:
-      already_authenticated: すでにログインしています。
-      inactive: アカウントがまだ有効化されていません。
-      invalid: 無効な %{authentication_keys} またはパスワードです。
-      last_attempt: あと1回の試行でアカウントがロックされます。
-      locked: アカウントがロックされています。
-      not_found_in_database: 無効な %{authentication_keys} またはパスワードです。
-      timeout: セッションが期限切れです。続けるためには再度ログインしてください。
-      unauthenticated: 続行する前にログインまたは新規登録が必要です。
-      unconfirmed: 続行する前にメールアドレスの確認が必要です。
+      already_authenticated: ''
+      inactive: アカウントがまだ有効化されていません
+      invalid: 無効な %{authentication_keys} またはパスワードです
+      last_attempt: あと1回の試行でアカウントがロックされます
+      locked: アカウントがロックされています
+      not_found_in_database: 無効な %{authentication_keys} またはパスワードです
+      timeout: セッションが期限切れです。続けるためには再度ログインしてください
+      unauthenticated: 続行する前にログインまたは新規登録が必要です
+      unconfirmed: 続行する前にメールアドレスの確認が必要です
     mailer:
       confirmation_instructions:
         subject: 確認の手順
@@ -27,8 +27,8 @@ ja:
       unlock_instructions:
         subject: アカウントのロック解除手順
     omniauth_callbacks:
-      failure: '%{kind} からの認証に失敗しました: "%{reason}"。'
-      success: "%{kind} アカウントから正常に認証されました。"
+      failure: '%{kind} からの認証に失敗しました: "%{reason}"'
+      success: "%{kind} アカウントから正常に認証されました"
     passwords:
       no_token: パスワードリセットのメールから来たページでないとアクセスできません。パスワードリセットメールから来た場合は、正しいURLであることを確認してください。
       send_instructions: 数分以内にパスワードのリセット方法に関する手順が記載されたメールが届きます。
@@ -45,9 +45,9 @@ ja:
       updated: アカウントが正常に更新されました。
       updated_but_not_signed_in: アカウントが正常に更新されましたが、パスワードが変更されたため、再度サインインする必要があります。
     sessions:
-      already_signed_out: 正常にログアウトしました。
-      signed_in: 正常にログインしました。
-      signed_out: 正常にログアウトしました。
+      already_signed_out: ログアウトしました
+      signed_in: ログインしました
+      signed_out: ログアウトしました
     unlocks:
       send_instructions: 数分以内にアカウントのロック解除方法に関する手順が記載されたメールが届きます。
       send_paranoid_instructions: アカウントが存在する場合、数分以内にアカウントのロック解除方法に関する手順が記載されたメールが届きます。

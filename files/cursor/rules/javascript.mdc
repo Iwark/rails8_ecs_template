@@ -1,0 +1,59 @@
+---
+description: 
+globs: app/javascript/**/*
+alwaysApply: false
+---
+# JavaScript Organization
+
+## Directory Structure
+
+- `app/javascript/`
+  - `controllers/` – Place only globally shared Stimulus controllers here (should be avoided in principle)
+  - `services/` – Reusable JavaScript services
+  - `utils/` – Utility functions
+  - `mixins/` – Mixins for reusable logic in Stimulus controllers and components (custom hooks, etc.)
+  - `models/` – Frontend models
+  - Other directories for editor extensions, channels, etc. as needed
+
+## Stimulus Controller Placement Policy
+
+- **As a rule, place Stimulus controllers in each ViewComponent directory (e.g., `app/frontend/components/**/component_controller.js`).**
+  - Only place controllers in `app/javascript/controllers/` if they are shared across multiple components.
+- Controllers under `app/javascript/controllers/` are registered globally via importmap.
+- Each component's `component_controller.js` is automatically lazy-loaded via `lazyLoadControllersFrom("components", application)` when needed.
+
+## Use of mixins
+
+- Place reusable logic for Stimulus controllers and components (e.g., useModal, useNotification, useFormNavigationGuard, etc.) in `app/javascript/mixins/`.
+- Export mixins as functions and import them where needed in controllers or components.
+- Extract complex UI logic or state management into mixins to keep controllers simple.
+
+## Use of importmap
+
+- Manage importmap in `config/importmap.rb`, pinning npm packages and files under `app/javascript/` and `app/frontend/components/`.
+- Pin Stimulus controllers, services, mixins, utils, etc. in importmap so they can be imported like `import "services/xxx"`.
+- After changing importmap settings, update pins using `bin/importmap` or similar tools.
+
+## JavaScript Service Pattern
+
+- Implement reusable logic as ES modules in `app/javascript/services/` and provide them as named exports.
+- Example:
+  ```javascript
+  // app/javascript/services/api_service.js
+  export const fetchData = async (url, options = {}) => { ... }
+  ```
+
+## Error Handling
+
+- Use try/catch for async operations and track errors with Sentry or similar tools as needed.
+- Use mixins (e.g., useNotification) for user-facing error notifications.
+
+## Coding Conventions & Best Practices
+
+- Actively use ES6+ features
+- Prefer async/await
+- Use camelCase for variables/functions, PascalCase for classes, UPPER_SNAKE_CASE for constants
+- Keep functions as pure as possible
+- Avoid global state
+- Add English comments to complex functions or modules
+- Minimize dependencies on external libraries

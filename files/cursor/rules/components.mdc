@@ -1,0 +1,130 @@
+---
+description:
+globs: app/frontend/components/**/*
+alwaysApply: false
+---
+
+# Component Architecture
+
+We use ViewComponents for reusable UI elements.
+
+## Directory Structure
+
+- Component files are organized in `app/frontend/components/`
+  - `admin_ui` - Admin-specific components
+  - `app/` - Application-specific components
+  - `general/` - Shared/reusable components
+
+## Component Implementation Pattern
+
+Each component follows a consistent structure:
+
+```
+components/
+  ├── admin_ui/
+  │   └── example/
+  │       ├── component.rb
+  │       ├── component.html.erb
+  │       └── component_controller.js
+  ├── app/
+  │   └── example/
+  │       ├── component.rb
+  │       ├── component.html.erb
+  │       └── component_controller.js
+  └── general/
+      └── button/
+          ├── component.rb
+          ├── component.html.erb
+          └── component_controller.js
+```
+
+Keep component structure flat (e.g., prefer `App::Home::HeaderComponent` over `App::Home::Header::Component`)
+
+## Naming Conventions
+
+- Ruby class: `App::Example::Component` or `General::Button::Component`
+- HTML template: `component.html.erb`
+- Stimulus controller: `component_controller.js`
+- CSS classes: Use Tailwind utility classes
+
+## Component Inheritance
+
+- App-specific components inherit from `App::Component`
+- General components inherit from `ViewComponent::Base`
+
+## Testing
+
+- Every component must have corresponding tests in `spec/frontend/components/`
+- Test both rendering and interactivity aspects
+- Use component previews for manual testing in development
+
+## Component Previews (Lookbook)
+
+### Directory Structure
+
+- Component previews are located in `spec/frontend/components/previews/`
+- Follow the same directory structure as the components:
+  ```
+  spec/frontend/components/previews/
+  ├── admin_ui/
+  │   └── example/
+  │       └── component_preview.rb
+  ├── app/
+  │   └── example/
+  │       └── component_preview.rb
+  └── general/
+      └── button/
+          └── component_preview.rb
+  ```
+
+### Naming Conventions
+
+- Preview class: `App::Example::ComponentPreview` or `General::Button::ComponentPreview`
+- Inherit from `ViewComponent::Preview`
+- File name: `component_preview.rb` (matching the component name)
+
+### Preview Guidelines
+
+- Create comprehensive scenarios covering different component states
+- Use descriptive `@label` annotations for each preview method
+- Create realistic sample data that demonstrates the component's capabilities
+- Test edge cases (empty states, maximum values, error states)
+- Group related scenarios logically within the same preview class
+- Always include a "default" or basic state preview
+
+### Sample Data Creation
+
+- **Always use `FactoryBot.build()` instead of `FactoryBot.create()`** to avoid database persistence
+- **Use `FactoryBot.build_with_id()` when components need IDs for routing** (e.g., detail buttons, links)
+- Create objects in memory only - this keeps the database clean and improves performance
+- Leverage existing factories from `spec/factories/` for consistency with tests
+- Use `define_singleton_method` instead of RSpec's `allow` for mocking methods in previews:
+
+  ```ruby
+  client = FactoryBot.build(:client)
+  client.define_singleton_method(:department_enabled?) { true }
+  ```
+
+- Avoid complex factory dependencies that might trigger `create()` callbacks
+
+### Required Scenarios
+
+When creating previews, include these common scenarios:
+
+- **Default state** - Basic component with minimal required data
+- **With data** - Component populated with realistic content
+- **Empty state** - Component with no data or empty collections
+- **Error state** - Component displaying error or invalid states
+- **Variants** - Different visual variants (primary, secondary, etc.)
+- **Interactive states** - Different states for interactive components
+
+## Best Practices
+
+- Components should be self-contained and focused on a single responsibility
+- Business logic should not be in components - use services and forms
+  - DO NOT put database queries in components (pass required data via `initialize`)
+- State management should be handled through props and Stimulus controllers
+- Use slots for flexible content composition
+- For complex components, break them down into smaller sub-components
+- Document props and behavior in component class comments
+- **DO NOT use `attr_reader` in ViewComponents** - Use instance variables directly in templates and methods for better clarity and simplicity

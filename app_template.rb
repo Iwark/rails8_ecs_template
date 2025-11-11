@@ -1,10 +1,32 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'pathname'
 
 REPO = 'Iwark/rails8_ecs_template'.freeze
 
-def get_github_directory_contents(path)
+TEMPLATE_PATH = __FILE__.freeze
+IS_REMOTE = TEMPLATE_PATH.start_with?('http')
+
+def get_local_directory_contents(path)
+  local_path = File.join(File.dirname(TEMPLATE_PATH), path)
+  return [] unless File.directory?(local_path)
+
+  Dir.glob(File.join(local_path, '**', '*'), File::FNM_DOTMATCH)
+     .reject { |f| File.basename(f).start_with?('.') || ['.', '..'].include?(File.basename(f)) }
+     .map do |f|
+    relative_path = Pathname.new(f).relative_path_from(Pathname.new(File.dirname(TEMPLATE_PATH))).to_s
+    path_from_local_path = Pathname.new(f).relative_path_from(Pathname.new(local_path)).to_s
+    {
+      'name' => path_from_local_path,
+      'type' => File.directory?(f) ? 'dir' : 'file',
+      'path' => relative_path,
+      'download_url' => f
+    }
+  end
+end
+
+def get_remote_directory_contents(path)
   url = if path.start_with?('/')
           URI.parse("https://api.github.com#{path}")
         else
@@ -28,15 +50,29 @@ def get_github_directory_contents(path)
   end
 end
 
+def get_github_directory_contents(path)
+  if IS_REMOTE
+    get_remote_directory_contents(path)
+  else
+    get_local_directory_contents(path)
+  end
+end
+
 def fetch_dir(path, local_dir = nil)
   local_dir ||= path
   path = "files/#{path}" unless path.start_with?('files/')
   FileUtils.mkdir_p(local_dir)
-  get_github_directory_contents(path).each do |file|
+  files = get_github_directory_contents(path)
+  files.each do |file|
     # Check if it's a file or a directory
     if file['type'] == 'file'
       local_file_path = File.join(local_dir, file['name'])
-      get(file['download_url'], local_file_path)
+      if IS_REMOTE
+        get(file['download_url'], local_file_path)
+      else
+        source_path = file['download_url']
+        copy_file(source_path, local_file_path)
+      end
     elsif file['type'] == 'dir'
       new_path = File.join(local_dir, file['name'])
       fetch_dir(file['path'], new_path)
@@ -47,14 +83,26 @@ end
 def fetch_file(remote_file, local_file = nil)
   local_file ||= remote_file
   remote_file = "files/#{remote_file}" unless remote_file.start_with?('files/')
-  remote_path = "https://raw.githubusercontent.com/#{REPO}/main/#{remote_file}"
-  remove_file(local_file)
-  get(remote_path, local_file)
+  if !IS_REMOTE
+    source_path = File.join(File.dirname(TEMPLATE_PATH), remote_file)
+    if File.exist?(source_path)
+      remove_file(local_file)
+      copy_file(source_path, local_file)
+    else
+      puts "Warning: Local template file not found: #{source_path}"
+    end
+  else
+    remote_path = "https://raw.githubusercontent.com/#{REPO}/main/#{remote_file}"
+    remove_file(local_file)
+    get(remote_path, local_file)
+  end
 end
 
 @app_name = app_name
 
 fetch_dir('vscode/', '.vscode/')
+fetch_dir('cursor/', '.cursor/')
+fetch_file('AGENTS.md')
 fetch_file('tool-versions', '.tool-versions')
 fetch_file('gitignore', '.gitignore')
 
@@ -67,10 +115,11 @@ fetch_file('Dockerfile')
 fetch_file('compose.yaml')
 fetch_file('Procfile.dev')
 
-@db_port = ask('Port for dev Postgres server (default: 5433)') || '5433'
-@redis_port = ask('Port for dev Redis server (default: 6380)') || '6380'
-@web_dev_port = ask('Port for Web dev server (default: 3000)') || '3000'
-@chrome_port = ask('Port for Chrome server (default: 3300)') || '3300'
+@magic_number = ask('Magic number (default: 0)') || '0'
+@db_port = (5433 + @magic_number.to_i).to_s
+@redis_port = (6380 + @magic_number.to_i).to_s
+@web_dev_port = (3000 + @magic_number.to_i).to_s
+@chrome_port = (3300 + @magic_number.to_i).to_s
 
 gsub_file 'compose.yaml', '$DB_PORT', @db_port
 gsub_file 'compose.yaml', '$REDIS_PORT', @redis_port
@@ -83,15 +132,11 @@ gsub_file 'Procfile.dev', '$WEB_DEV_PORT', @web_dev_port
 fetch_file('config/database.yml.example', 'config/database.yml')
 run 'mkdir tmp/backups'
 
-fetch_dir('app/components/')
+fetch_dir('app/frontend/components/')
 fetch_dir('app/validators/')
 
 # tailwind
-fetch_file('config/tailwind.config.js')
-fetch_file('app/assets/stylesheets/application.tailwind.css')
-insert_into_file 'app/views/layouts/application.html.erb', %(
-    <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload", media: "all" %>
-), after: '<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>'
+fetch_file('app/assets/tailwind/application.css')
 
 run 'mkdir app/assets/builds'
 run 'touch app/assets/builds/.keep'
@@ -105,18 +150,7 @@ run 'bundle lock --add-platform aarch64-linux-musl'
 run 'bundle lock --add-platform arm64-darwin-23'
 run 'bundle lock --add-platform x86_64-linux'
 run 'bundle lock --add-platform x86_64-linux-musl'
-run 'bundle install --path vendor/bundle --jobs=4'
-
-# Fix pesky hangtime
-run 'bundle exec spring stop'
-
-# Devise
-run 'bundle exec rails g devise:install'
-gsub_file 'config/initializers/devise.rb', /'please-change-me-at-config-initializers-devise@example.com'/,
-          "\"no-reply@\#{Settings.app_domain}\""
-
-# annotate gem
-run 'bundle exec rails g annotate:install'
+# run 'bundle install --path vendor/bundle --jobs=4'
 
 # set config/application.rb
 application do
@@ -145,28 +179,31 @@ application do
       g.helper false
     end
 
-    # load lib files
-    config.autoload_paths += %W(#{config.root}/lib)
-    config.autoload_paths += Dir["#{config.root}/lib/**/"]
-
-    # load validators
-    config.autoload_paths += Dir[Rails.root.join('app', 'validators', '*')]
+    %w[lib validators errors].each do |dir|
+      config.autoload_paths += %W(#{config.root}/#{dir})
+      config.autoload_paths += Dir["#{config.root}/#{dir}/**/"]
+    end
 
     # use sidekiq as active_job.queue_adapter
     config.active_job.queue_adapter = :sidekiq
 
-    initializer "app_assets", after: "importmap.assets" do
-      Rails.application.config.assets.paths << Rails.root.join('app') # for component sidecar js
-    end
+    # Make propshaft work with view_component (sidecar js)
+    # See: https://github.com/rails/propshaft/issues/87#issuecomment-1127234248
+    config.autoload_paths << Rails.root.join("app/frontend/components")
+    config.importmap.cache_sweepers << Rails.root.join("app/frontend")
+    config.assets.paths << Rails.root.join("app/frontend")
+    config.view_component.view_component_path = "app/frontend/components"
 
-    # Sweep importmap cache for components
-    config.importmap.cache_sweepers << Rails.root.join('app/components')
+    # Disable Active Storage default routes to prevent direct file access
+    config.active_storage.draw_routes = false
+
+    # Autoload lib with ignore list for non-Ruby directories
+    config.autoload_lib(ignore: %w(assets tasks))
   }
 end
 
 # For Bullet (N+1 Problem)
-insert_into_file 'config/environments/development.rb', %(
-
+environment %(
   # Config for bullet
   config.after_initialize do
     Bullet.enable = true
@@ -177,10 +214,10 @@ insert_into_file 'config/environments/development.rb', %(
   end
 
   config.hosts << Settings.app_domain
-  config.hosts << ".#{Settings.app_domain}"
+  config.hosts << ".\#{Settings.app_domain}"
 
   config.web_console.permissions = '0.0.0.0/0'
-), after: 'config.assets.quiet = true'
+), env: 'development'
 
 # Default url options for test
 insert_into_file 'config/environments/test.rb', %(
@@ -215,22 +252,6 @@ fetch_file('irbrc', '.irbrc')
 # Rubocop
 fetch_file('rubocop.yml', '.rubocop.yml')
 
-# Kaminari config
-run 'bundle exec rails g kaminari:config'
-
-# Rspec
-run 'bundle exec rails g rspec:install'
-run "echo '--color -f d' > .rspec"
-fetch_file('spec/rails_helper.rb')
-fetch_file('spec/spec_helper.rb')
-fetch_file('spec/system_helper.rb')
-fetch_dir('spec/validators/')
-fetch_dir('spec/system/support/')
-fetch_dir('spec/support/')
-gsub_file 'spec/system/support/cuprite_setup.rb', '$CHROME_PORT', @chrome_port
-
-remove_file 'test'
-
 fetch_dir('config/locales/')
 remove_file 'config/locales/en.yml'
 
@@ -251,17 +272,10 @@ fetch_file('config/initializers/switch_user.rb')
 # sidekiq
 fetch_file('app/jobs/application_job.rb')
 fetch_file('config/initializers/sidekiq.rb')
-fetch_file('config/sidekiq.rb')
+fetch_file('config/sidekiq.yml')
 
 # sentry
 fetch_file('config/initializers/sentry.rb')
-
-# sprockets
-fetch_file('config/initializers/web_app_manifest.rb')
-
-# i18n-tasks
-fetch_file('config/i18n-tasks.yml')
-run 'cp $(bundle exec i18n-tasks gem-path)/templates/rspec/i18n_spec.rb spec/'
 
 # seeds
 fetch_file('db/seeds.rb')
@@ -269,20 +283,83 @@ run 'mkdir db/seeds'
 run 'touch db/seeds/.keep'
 fetch_file('lib/tasks/refresh_seeds.rake')
 
+# parallel
+fetch_file('lib/tasks/parallel.rake')
+
+# forms
+fetch_dir('app/forms/')
+
 after_bundle do
+
+  remove_file '.github/workflows/ci.yml'
+
+  fetch_file('app/models/application_record.rb')
+
   # javascripts & importmap
-  fetch_file('app/assets/config/manifest.js')
   fetch_file('app/javascript/controllers/index.js')
+  fetch_file('app/javascript/controllers/reload_controller.js')
+
   fetch_file('app/javascript/application.js')
+  fetch_dir('app/javascript/mixins/')
 
   fetch_file('config/importmap.rb')
+  fetch_file('config/initializers/assets.rb')
+
+  fetch_dir('app/assets/images/icons/')
+  fetch_dir('app/assets/stylesheets/')
 
   # storage
   fetch_file('config/puma.rb')
   fetch_file('config/storage.yml')
 
+  # Insert es-module-shims for legacy browsers (before importmap tags)
+  insert_into_file 'app/views/layouts/application.html.erb', %(
+    <%# NOTE: https://github.com/rails/importmap-rails?tab=readme-ov-file#supporting-legacy-browsers-such-as-safari-on-ios-15 %>\n
+    <script async src="https://ga.jspm.io/npm:es-module-shims@2.6.2/dist/es-module-shims.js" integrity="sha384-Sy58vVwkveOO72W4SqZ3BXZ6oXXIcY185I0U90aPs9PDd6Gx/vbwnnYP3InrO5em" crossorigin="anonymous" data-turbo-track="reload"></script>\n
+  ), before: '<%= javascript_importmap_tags %>'
+
+  # tailwind-css-rails and propshaft support
+  gsub_file 'app/views/layouts/application.html.erb', ':app', '"tailwind", "flatpickr", "prosemirror", "slimselect"'
+
+  # Settings
+  %w[settings.yml settings/test.yml settings/staging.yml settings/development.yml
+     settings/production.yml].each do |file|
+    fetch_file("config/#{file}")
+    gsub_file("config/#{file}", '$WEB_DEV_PORT', @web_dev_port)
+  end
+
+  # Kaminari config
+  run 'bundle exec rails g kaminari:config'
+
   # i18n spec
   fetch_file('spec/i18n_spec.rb')
+
+  # Fix pesky hangtime
+  run 'bundle exec spring stop'
+
+  # Devise
+  run 'bundle exec rails g devise:install'
+  gsub_file 'config/initializers/devise.rb', /'please-change-me-at-config-initializers-devise@example.com'/,
+            "\"no-reply@\#{Settings.app_domain}\""
+
+  # annotate gem
+  run 'bundle exec rails g annotate:install'
+
+  # Rspec
+  run 'bundle exec rails g rspec:install'
+  run "echo '--color -f d' > .rspec"
+  fetch_file('spec/rails_helper.rb')
+  fetch_file('spec/spec_helper.rb')
+  fetch_file('spec/system_helper.rb')
+  fetch_dir('spec/validators/')
+  fetch_dir('spec/system/support/')
+  fetch_dir('spec/support/')
+  gsub_file 'spec/system/support/cuprite_setup.rb', '$CHROME_PORT', @chrome_port
+  remove_file 'test'
+
+  # i18n-tasks
+  fetch_file('config/i18n-tasks.yml')
+  run 'cp $(bundle exec i18n-tasks gem-path)/templates/rspec/i18n_spec.rb spec/'
 
   # rubocop
   run 'bundle exec rubocop -A'

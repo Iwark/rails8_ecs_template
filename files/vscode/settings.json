@@ -1,4 +1,5 @@
 {
+  "editor.rulers": [120],
   "emmet.includeLanguages": {
     "*.html.erb": "html",
     "erb": "html",
@@ -9,6 +10,15 @@
     "*.html.erb": "erb",
     "*.html.slim": "slim"
   },
+  "files.exclude": {
+    "**/vendor/**": true
+  },
+  "files.watcherExclude": {
+    "**/vendor/**": true
+  },
+  "search.exclude": {
+    "**/vendor": true
+  },
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.includeLanguages": {
     "javascript": "javascript",
@@ -16,5 +26,9 @@
     "erb": "html",
     "slim": "html",
     "rb": "html"
+  },
+  "[ruby]": {
+    "editor.defaultFormatter": "rubocop.vscode-rubocop",
+    "editor.formatOnSave": true
   }
 }

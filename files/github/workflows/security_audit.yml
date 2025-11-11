@@ -1,0 +1,31 @@
+name: security-audit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  schedule:
+    - cron: "0 8 * * *" # everyday at 08:00
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Scan for common Rails security vulnerabilities using static analysis
+        run: bundle exec brakeman --no-pager
+
+      - name: Run bundler-audit
+        run: bundle exec bundler-audit check --update
+
+      - name: Run importmap audit
+        run: bin/importmap audit

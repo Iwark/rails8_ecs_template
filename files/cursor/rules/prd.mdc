@@ -1,0 +1,143 @@
+---
+description:
+globs: docs/prds/**/*.md
+alwaysApply: false
+---
+
+# PRD Creation Guidelines
+
+## Basic Structure
+
+Please create PRDs with the following structure:
+
+```markdown
+# <Title>
+
+## User Story (ユーザーストーリー)
+
+- As a <user type>, I want to <action> in order to <purpose>.
+  - Additional explanations in bullet points as needed
+
+## Acceptance Criteria
+
+- List functional requirements in bullet points
+  - Nest details as needed
+  - Specify concrete numbers and conditions
+
+## Detailed Specifications
+
+### Data Structure
+
+- List table names and model names
+  - Column name
+    - Data type
+    - Constraints
+    - Notes
+
+### UI/UX
+
+- Target screen:
+  - path: /path/to/screen
+- List main screen functions and operation flow
+- List specific UI elements and operation methods
+
+### Other Required Sections
+
+- Input rules
+- Validation
+- Error handling
+- Add other sections as needed based on functionality
+
+## Future Expansion Possibilities
+
+- List features being considered for future addition in bullet points
+```
+
+## Writing Guidelines
+
+1. **Title**
+
+   - Write a title that clearly shows what kind of user story it is (e.g., "User Creation by Client Admin")
+
+2. **User Story**
+
+   - Clearly specify "who", "what", and "why"
+   - Use one of the following user types:
+     - System Admin
+     - Client Admin
+     - Client User
+
+3. **Acceptance Criteria**
+
+   - Write functional requirements in specific and verifiable form
+   - Specify numerical criteria if any
+   - Consider items that should be tested with automated tests
+
+4. **Detailed Specifications - Data Structure**
+
+   - Write table names in plural form (e.g., users)
+   - Write column names according to conventions
+     - id: Primary key
+     - created_at: Creation timestamp
+     - updated_at: Update timestamp
+   - Specify data types concretely (integer, string, boolean, etc.)
+
+5. **Detailed Specifications - UI/UX**
+
+   - Always include screen path
+   - List main operation flow
+   - Specify use of modals and popups
+   - List button and form placement
+   - Ensure consistency with existing page taste/style
+   - Include design for each component if multiple components are needed
+
+6. **Future Expansion Possibilities**
+   - Only list features that are specifically being considered for implementation
+
+## Examples
+
+Here are good examples:
+
+### Data Structure Example
+
+```markdown
+### Data Structure
+
+- users
+  - family_name
+    - string
+    - length: 1..32
+  - given_name
+    - string
+    - length: 1..32
+  - username
+    - string
+    - length: 2..48
+    - unique within the client
+    - %r{\A[a-zA-Z0-9.!#$%&'*+/@=?^_`{|}~-]+\z}
+  - role
+    - enum(string)
+    - staff or admin
+  - password
+    - string
+    - devise
+```
+
+### UI/UX Example
+
+```markdown
+### UI/UX
+
+- Target screen:
+  - path: /clients/:id
+- Check password policy in "Security Settings" tab
+- Click "Edit" button to display modal
+- Changes are reflected immediately after form submission
+```
+
+## Japanese/English Version Creation
+
+- Create PRDs in both Japanese and English
+  - Japanese version: `docs/prds/ja/`
+  - English version: `docs/prds/en/`
+- Ensure content matches between versions

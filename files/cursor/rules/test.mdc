@@ -1,0 +1,95 @@
+---
+description:
+globs: spec/**/*.rb
+alwaysApply: false
+---
+
+# Testing Strategy
+
+## Directory Structure
+
+- All tests are located in the `spec/` directory
+  - `spec/models/` - Model unit tests
+  - `spec/services/` - Service object tests
+  - `spec/frontend/components/` - ViewComponent tests
+  - `spec/forms/` - Form object tests
+  - `spec/requests/` - HTTP request/response tests for all controllers
+  - `spec/system/` - End-to-end browser tests
+
+**Important:** DO NOT create Controller specs (`spec/controllers/`). Always use Request specs (`spec/requests/`) instead.
+
+## Test Types
+
+- Unit Tests: Test individual classes and methods in isolation
+- Integration Tests: Test interactions between components
+- System Tests: Test end-to-end flows with browser automation
+- Request Tests: Test HTTP requests and responses for all controller actions (USE THESE INSTEAD OF CONTROLLER SPECS)
+
+## Controller Testing Guidelines
+
+- **Always use Request specs, never Controller specs**
+- Place all controller tests in `spec/requests/` directory
+- Use `type: :request` in RSpec.describe
+- Test full HTTP request/response cycle
+- Verify status codes, response content, and headers
+- Test authentication and authorization properly
+- Example structure:
+  ```ruby
+  # spec/requests/public/invoices_spec.rb
+  RSpec.describe "Public::Invoices", type: :request do
+    describe "GET /public/invoices/download" do
+      it "downloads invoice PDF with valid token" do
+        get "/public/invoices/download", params: { token: valid_token }
+        expect(response).to have_http_status(:ok)
+      end
+    end
+  end
+  ```
+
+## RSpec Guidelines
+
+- Follow TDD approach (red-green-refactor)
+- Keep tests focused and concise
+- Use meaningful context and example descriptions (in English)
+  Choose clear, descriptive names for memoized helpers and test data (e.g., `let(:client_with_unsent_invoice)`, not `let(:client1)`).
+- Organize tests with describe/context blocks
+- Use factories instead of fixtures
+- Avoid excessive mocking and stubbing
+- Test edge cases and failure scenarios
+
+## Factory Setup
+
+- Use FactoryBot for test data creation
+- Keep factories in `spec/factories/`
+- Factories should create valid objects by default
+- Use traits for variations
+- Avoid creating unnecessary database records
+
+## System Tests
+
+- Use Capybara for browser interaction
+- Keep system tests focused on user workflows
+- Test important user journeys
+- Use page objects pattern for complex pages
+- Take screenshots on failures for debugging
+
+## API Testing
+
+- Document API endpoints with Rswag
+- Test both success and error cases
+- Validate response schema and status codes
+- Test authentication and authorization
+- Keep request specs up to date with API changes
+- **After modifying any API request specs, always run** `bin/rails rswag:all` **to regenerate Swagger documentation. Commit updated docs in the same PR.**
+
+## Testing Best Practices
+
+- Keep tests deterministic (no random failures)
+- Avoid testing implementation details
+- Test behavior, not internal methods
+- Run tests in CI on every pull request
+- Fix flaky tests immediately
+- Use `--fail-fast` during development
+- Keep test suite running time reasonable
+- Avoid testing log output or mocking Rails.logger (log content changes frequently)
+- Avoid testing exception capture methods (focus on behavior, not implementation)

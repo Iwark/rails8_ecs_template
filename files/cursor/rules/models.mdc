@@ -1,0 +1,105 @@
+---
+description: 
+globs: app/models/**/*
+alwaysApply: false
+---
+# Models
+
+## Directory Structure
+- Model files are in `app/models/`
+- Use subdirectories for namespaced models
+- Place concerns in `app/models/concerns/`
+
+## Implementation Pattern
+- Keep models skinny
+  - Validation and association logic belongs in models
+  - Complex business logic belongs in services
+  - Form-specific validations belong in form objects
+- Use concerns for shared functionality
+
+## Associations
+- Define associations at the top of the class
+- Order: belongs_to, has_one, has_many
+- Add necessary indices for foreign keys
+- Use appropriate dependent options (e.g., :destroy, :nullify)
+- Example:
+  ```ruby
+  class User < ApplicationRecord
+    belongs_to :organization
+    has_one :profile, dependent: :destroy
+    has_many :posts, dependent: :destroy
+    has_many :comments, dependent: :nullify
+    has_and_belongs_to_many :groups
+    
+    # Rest of class
+  end
+  ```
+
+## Validations
+- Define validations after associations
+- Use built-in validators when possible
+- Extract complex validations to custom validators
+- Example:
+  ```ruby
+  class User < ApplicationRecord
+    # Associations
+    
+    # Validations
+    validates :email, presence: true, uniqueness: true, email: true
+    validates :name, presence: true, length: { minimum: 2, maximum: 50 }
+    validates :password, length: { minimum: 8 }, if: -> { password.present? }
+    
+    # Rest of class
+  end
+  ```
+
+## Callbacks
+- Use callbacks sparingly
+- Consider moving callback logic to service objects
+- Order callbacks by lifecycle (before_validation, after_save, etc.)
+- Avoid callbacks that affect other models
+
+## Scopes
+- Use scopes for common queries
+- Name scopes clearly (use prefixes like 'by_', 'with_' when appropriate)
+- Keep scopes simple and composable
+- Example:
+  ```ruby
+  class Post < ApplicationRecord
+    scope :published, -> { where(published: true) }
+    scope :recent, -> { order(created_at: :desc) }
+    scope :by_author, ->(author_id) { where(author_id: author_id) }
+    scope :with_comments, -> { includes(:comments) }
+  end
+  ```
+
+## Enums
+- Use enums for status fields and other categorical attributes
+- Define enums with hashes for explicit values
+- Add prefix/suffix when enum name might clash with other methods
+- Example:
+  ```ruby
+  class Task < ApplicationRecord
+    enum :status, {
+      pending: 0,
+      in_progress: 1,
+      completed: 2,
+      cancelled: 3
+    }
+    
+    enum :priority, {
+      low: 0,
+      medium: 1,
+      high: 2,
+      urgent: 3
+    }, _prefix: true
+  end
+  ```
+
+## Best Practices
+- Keep models focused on data persistence and validation
+- Move complex queries to query objects
+- Use virtual attributes for non-persisted data
+- Implement proper error handling
+- Write thorough tests for models
+- Document complex attributes or relationships

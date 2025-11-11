@@ -1,0 +1,7 @@
+<%= input_container(class: @options[:class]) do %>
+  <%= label(for: nil) %>
+  <div class="flex relative gap-4 items-center">
+    <%= safe_join(collection_tags) %>
+  </div>
+  <%= error_container %>
+<% end %>

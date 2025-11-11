@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css?family=Noto+Sans+JP:400,700&subset=japanese");
+@import "tailwindcss";
+
+@theme {
+  --font-noto-sans-jp: "Noto Sans JP", "sans-serif";
+  --color-black: #303030;
+  --color-gray-10: #E7ECF1;
+}
+
+/**
+ * The base layer is for things like reset rules or default styles
+ * applied to plain HTML elements.
+ */
+@layer base {
+  html,
+  body {
+    font-size: 16px;
+    line-height: 24px;
+
+    @apply text-black font-noto-sans-jp;
+  }
+  h1 {
+    @apply text-xl font-bold;
+  }
+  h2 {
+    @apply text-lg font-bold;
+  }
+  p:empty::after {
+    content: "\00A0";
+  }
+  select {
+    height: 2rem;
+  }
+  select:invalid {
+    @apply text-gray-10;
+  }
+  select option[value=""] {
+    @apply text-gray-10;
+    display: none;
+  }
+}
+
+/**
+ * The components layer is for class-based styles
+ * that you want to be able to override with utilities.
+ */
+@layer components {
+}
+
+/**
+ * The utilities layer is for small, single-purpose classes
+ * that should always take precedence over any other styles.
+ */
+@layer utilities {
+  .overflow-scrollbar::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background-color: #fcfcfc;
+  }
+  .overflow-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    box-shadow: inset 0 0 8px 8px #909090;
+    border: solid 4px transparent;
+  }
+  .field_with_errors {
+    width: 100%;
+  }
+  .hidden-but-exists {
+    opacity: 0;
+    position: absolute;
+    height: 1;
+    width: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+}

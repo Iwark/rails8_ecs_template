@@ -1,0 +1,8 @@
+---
+ja:
+  general:
+    input:
+      date_time_picker:
+        component:
+          alt_format: Y年m月d日 H:i
+          date_format: Z

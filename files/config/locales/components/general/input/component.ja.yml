@@ -1,0 +1,6 @@
+---
+ja:
+  general:
+    input:
+      component:
+        select_placeholder: 選択してください

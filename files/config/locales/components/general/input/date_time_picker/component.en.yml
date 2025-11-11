@@ -1,0 +1,8 @@
+---
+en:
+  general:
+    input:
+      date_time_picker:
+        component:
+          alt_format: B d, Y H:i
+          date_format: Z

@@ -1,0 +1,94 @@
+---
+description: Best practices for internationalization file organization
+globs: *.rb,*.html,*.yml
+alwaysApply: false
+---
+# Directory Structure
+- `config/locales/`
+  - `components/` - Component translations
+    - `admin_ui/` - System Admin components
+    - `app/` - User Application components
+    - `general/` - Shared components
+  - `models.{locale}.yml` - Model-related translations
+  - `controllers.{locale}.yml` - Controller-related translations
+  - `notice.{locale}.yml` - Notification messages
+
+## Component Translations
+- Place under `components/{admin_ui|app|general}/{component_folder_name}/{component_file_name}.{locale}.yml`
+- Use namespace prefixes:
+  - `admin_ui.*` for system admin components
+  - `app.*` for user application components
+  - `general.*` for shared components
+
+## Example
+
+If it is a key used in `app/frontend/components/app/user_list/table_row_component.html.erb`, place the following file in `config/locales/components/app/user_list/table_row_component.ja.yml` (and same for en.yml)
+
+```
+---
+ja:
+  app:
+    user_list:
+      table_row_component:
+        activate_menu_item: 利用を再開する
+        activate_modal_description: 利用を再開するとこのユーザーはログインや操作ができるようになります。よろしいですか？
+        activate_modal_title: ユーザーの利用を再開します
+        cancel_button: 戻る
+        deactivate_menu_item: 利用を停止する
+        deactivate_modal_description: 利用を停止するとこのユーザーはログインや操作ができなくなります。よろしいですか？
+        deactivate_modal_title: ユーザーの利用を停止します
+        edit_button: 編集
+        reset_password_button: リセットする
+        reset_password_menu_item: パスワードをリセットする
+        reset_password_modal_description: リセットするとこのユーザーは既存のパスワードを利用できなくなります。よろしいですか？
+        reset_password_modal_title: ユーザーのパスワードをリセットします
+```
+
+
+## Model Translations
+- Structure in `models.{locale}.yml`:
+  ```yaml
+  en:
+    activerecord:
+      models:
+        user: User
+      attributes:
+        user:
+          email: Email
+      errors:
+        messages:
+          invalid_format: Invalid format
+        models:
+          user:
+            attributes:
+              email:
+                taken: Email is already taken
+    enums:
+      user:
+        role:
+          admin: Admin
+          staff: Staff
+  ```
+- Follow these patterns:
+  - Model names: `activerecord.models.{model_name}`
+  - Attributes: `activerecord.attributes.{model_name}.{attribute}`
+  - Error messages: `activerecord.errors.models.{model_name}.attributes.{attribute}`
+  - Enums: `enums.{model_name}.{enum_field}.{enum_value}`
+
+# Quality Assurance
+- Normalize keys:
+  ```bash
+  docker compose exec web bundle exec i18n-tasks normalize
+  ```
+- Run health checks:
+  ```bash
+  docker compose exec web bundle exec i18n-tasks health
+  ```
+- Keep translations in sync across `ja` and `en` locales
+- Remove unused translations
+
+# Development Workflow
+- Add translations when creating new components
+- Update both `ja` and `en` locale files simultaneously
+- Use `i18n-tasks normalize` to normalize keys
+- Use `i18n-tasks health` to detect and clean unused translations

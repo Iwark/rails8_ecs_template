@@ -1,15 +1,15 @@
 source 'https://rubygems.org'
 
-ruby '3.3.6'
+ruby '3.4.5'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails', branch: 'main'
-gem 'rails', '~> 8.0.0'
+gem 'rails', '~> 8.0.2.1'
 
-# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
-gem 'sprockets-rails'
+# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
+gem 'propshaft'
 
 # Use sqlite3 as the database for Active Record
-# gem "sqlite3", "~> 1.4"
+# gem "sqlite3", "~> 2.1"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem 'puma', '>= 5.0'
@@ -38,8 +38,16 @@ gem 'bcrypt', '~> 3.1.7'
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: %i[windows jruby]
 
+# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
+# gem "solid_cache"
+# gem "solid_queue"
+# gem "solid_cable"
+
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', require: false
+
+# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
+gem 'kamal', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem 'image_processing', '~> 1.2'
@@ -57,10 +65,15 @@ gem 'active_hash'
 gem 'aws-sdk-rails'
 gem 'aws-sdk-s3'
 gem 'cancancan'
+gem 'config'
+gem 'csv'
 gem 'devise'
-gem 'devise_invitable', '~> 2.0.0'
-gem 'enum_help'
-gem 'html5_validators'
+# gem 'devise_invitable', '~> 2.0.0'
+# gem 'doorkeeper', '~> 5.7'
+# gem 'doorkeeper-openid_connect'
+# gem 'flipper'
+# gem 'flipper-active_record'
+# gem 'html5_validators'
 gem 'http'
 gem 'i18n-tasks'
 gem 'inline_svg'
@@ -72,16 +85,23 @@ gem 'net-imap', require: false
 gem 'net-pop', require: false
 gem 'net-smtp', require: false
 gem 'nokogiri'
-gem 'omniauth'
+# gem 'omniauth'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
+gem 'rack-cors'
 gem 'rails-flog'
 gem 'rexml'
+# gem 'rswag'
 gem 'rubocop', require: false
+gem 'rubocop-capybara', require: false
+gem 'rubocop-erb', require: false
+gem 'rubocop-factory_bot', require: false
 gem 'rubocop-rails', require: false
 gem 'rubocop-rspec', require: false
+gem 'rubocop-rspec_rails', require: false
 gem 'sentry-rails'
 gem 'sentry-ruby'
+gem 'sentry-sidekiq'
 gem 'sidekiq'
 gem 'sidekiq-cron'
 gem 'sidekiq-unique-jobs'
@@ -91,15 +111,20 @@ gem 'view_component', '>= 2.50.0'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem 'debug', platforms: %i[mri windows]
+  gem 'debug', platforms: %i[mri windows], require: 'debug/prelude'
+
+  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+  gem 'brakeman', require: false
 
   ## custom gems
-  gem 'annotate'
+  # TODO: until https://github.com/ctran/annotate_models/pull/1031 is merged
+  gem 'annotate', github: 'tnir/annotate_models', branch: 'rails-8'
   gem 'database_rewinder'
   gem 'factory_bot_rails'
   gem 'faker'
   gem 'gimei'
   gem 'guard-rspec', require: false
+  gem 'parallel_tests'
   gem 'rb-fsevent'
   gem 'rspec-rails'
   gem 'timecop'
@@ -109,16 +134,15 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem 'web-console'
 
-  # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
-  gem 'rack-mini-profiler'
-
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
   gem 'spring'
 
   ## custom gems
   gem 'bullet'
+  gem 'bundler-audit'
   gem 'foreman'
   gem 'htmlbeautifier'
+  gem 'listen' # for propshaft
   gem 'seed_dump'
   gem 'spring-commands-rspec'
   gem 'yard'
@@ -132,6 +156,7 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem 'capybara'
+  # gem "selenium-webdriver"
 
   ## custom gems
   gem 'cuprite'
@@ -139,4 +164,5 @@ group :test do
   gem 'shoulda-matchers'
   gem 'simplecov', require: false
   gem 'simplecov-cobertura'
+  gem 'webmock'
 end

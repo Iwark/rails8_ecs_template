@@ -1,8 +1,10 @@
-require:
+plugins:
   - rubocop-capybara
   - rubocop-rails
   - rubocop-rspec
+  - rubocop-rspec_rails
   - rubocop-factory_bot
+  - rubocop-erb
 AllCops:
   NewCops: enable
   Exclude:
@@ -10,7 +12,9 @@ AllCops:
     - "config/**/*"
     - "db/**/*"
     - "vendor/**/*"
+    - "tmp/**/*"
     - "lib/tasks/auto_annotate_models.rake"
+    - "lib/monkey_patches/*"
 Lint/EmptyBlock:
   Exclude:
     - "spec/factories/*"
@@ -26,17 +30,35 @@ Rails/UnknownEnv:
     - test
 Rails/WhereNotWithMultipleConditions:
   Enabled: false
+RSpec/EmptyExampleGroup:
+  Exclude:
+    - "spec/requests/api/**/*"
 RSpec/ExampleLength:
   Max: 20
   Exclude:
     - "spec/system/*"
+RSpec/ScatteredSetup:
+  Exclude:
+    - "spec/requests/api/**/*"
 RSpec/MultipleExpectations:
   Max: 5
   Exclude:
     - "spec/system/*"
+RSpec/MultipleMemoizedHelpers:
+  Max: 8
+  Exclude:
+    - "spec/requests/api/**/*"
+RSpec/NestedGroups:
+  Max: 4
+RSpec/VariableName:
+  Exclude:
+    - "spec/requests/**/*"
+    - "spec/system/**/*"
 Style/Documentation:
   Enabled: false
 Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/RaiseArgs:
   Enabled: false
 FactoryBot/AssociationStyle:
   EnforcedStyle: explicit

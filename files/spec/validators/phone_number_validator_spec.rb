@@ -42,7 +42,7 @@ RSpec.describe PhoneNumberValidator, type: :model do
         end
 
         it 'is invalid' do
-          expect(mock).to be_invalid
+          expect(mock).not_to be_valid
         end
 
         it 'raises invalid_phone_number_format error' do

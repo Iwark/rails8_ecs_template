@@ -1,0 +1,368 @@
+---
+description: Guidelines for using Input components in ViewComponents
+globs: app/frontend/components/**/*
+alwaysApply: false
+---
+
+# Input Components Usage Guidelines
+
+## Overview
+
+We use `General::Input::Component` as the main input component that automatically delegates to specific input types based on the `as` parameter or attribute type detection.
+
+## Basic Usage Pattern
+
+### Standard Text Input
+
+```erb
+<%= render General::Input::Component.new(form: f, attribute: :name) %>
+```
+
+### With Custom Label
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :email,
+  label: 'Custom Label Text'
+) %>
+```
+
+### Required Fields
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :email,
+  required: true
+) %>
+```
+
+## Input Types
+
+### Text Area
+
+Use `as: :text` for multi-line text inputs:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :remarks,
+  as: :text
+) %>
+```
+
+### Select Dropdown
+
+Use `collection` parameter for dropdowns:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :status,
+  collection: [['Active', true], ['Inactive', false]]
+) %>
+```
+
+### Radio Buttons
+
+Use `as: :radio_buttons` with collection:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :receive_notifications,
+  as: :radio_buttons,
+  collection: [['Yes', true], ['No', false]]
+) %>
+```
+
+### Date and DateTime
+
+```erb
+<!-- Date picker -->
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :active_from,
+  as: :date
+) %>
+
+<!-- DateTime picker -->
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :paid_at,
+  as: :datetime_local
+) %>
+```
+
+### Password Fields
+
+Use `type: :password` with `toggle_password_visibility` for password inputs:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :password,
+  type: :password,
+  toggle_password_visibility: true
+) %>
+```
+
+### Number Inputs
+
+Use `type: :number` for numeric fields:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :fee_percentage,
+  type: :number
+) %>
+```
+
+### File Uploads
+
+Use `as: :file` for file upload inputs:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :attachment,
+  as: :file,
+  required: true
+) %>
+```
+
+## Advanced Options
+
+### Hints and Help Text
+
+Use `hint` parameter for help text:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :notes,
+  hint: 'Describe how this value will be used.'
+) %>
+```
+
+### Add-on Text
+
+Use `add_on` for suffix text:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :duration_minutes,
+  type: :number,
+  add_on: 'min'
+) %>
+```
+
+### Placeholder Text
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :postal_code,
+  placeholder: '123-4567'
+) %>
+```
+
+### Stimulus Integration
+
+Use `data` parameter for Stimulus controllers:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :postal_code,
+  data: {
+    "#{controller_id}-target": 'postalCode',
+    action: "input->#{controller_id}#updatePostalCode"
+  }
+) %>
+```
+
+### Disabled Fields
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :cycle_fee,
+  disabled: true
+) %>
+```
+
+### Min/Max Values
+
+For number inputs, use `min` and `max` attributes:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :min_length,
+  type: :number,
+  min: 1,
+  max: 100
+) %>
+```
+
+### Custom Validations
+
+Override automatic validation detection when needed:
+
+```erb
+<%= render General::Input::Component.new(
+  form: f,
+  attribute: :required,
+  validations: [],
+  collection: [['必須', true], ['任意', false]]
+) %>
+```
+
+## Checkbox Groups
+
+For grouped checkboxes, use `General::CheckboxGroup::Component`:
+
+```erb
+<%= render General::CheckboxGroup::Component.new(
+  form: f,
+  attribute: :payment_method,
+  label: false
+) do |c| %>
+  <% c.with_checkbox(
+    title: 'Wire Transfer',
+    description: '銀行振込による支払い方法です',
+    input: {
+      value: :wire_transfer,
+      checked: true
+    }
+  ) %>
+<% end %>
+```
+
+## Collection Patterns
+
+### Simple Arrays
+
+```erb
+collection: [['Active', true], ['Inactive', false]]
+```
+
+### Model Collections
+
+```erb
+collection: @form.categories.map { |category| [category.name, category.id] }
+```
+
+### Enum Collections
+
+The component automatically detects enum attributes and generates collections.
+
+### Complex Collections with Label/Value Methods
+
+```erb
+collection: @form.support_user_options.map { |user| [user.name, user.id] }
+```
+
+## Best Practices
+
+### Form Structure
+
+- Always wrap inputs in `<div class="mb-4">` for consistent spacing
+- Use `form_with` for the main form wrapper
+- Include `f.hidden_field` for necessary hidden fields
+
+### Validation
+
+- Set `required: true` for mandatory fields
+- Use `validations: []` to override automatic validation detection when needed
+- The component automatically shows validation errors from the form object
+
+### Labels and Accessibility
+
+- Labels are automatically generated from model attribute names using `human_attribute_name`
+- Override with `label:` parameter when needed
+- Use `label: false` to hide labels when not needed
+- Use `label: Model.human_attribute_name(:attribute)` for cross-model references
+
+### Data Attributes
+
+- Always namespace Stimulus data attributes with component controller ID
+- Use consistent naming: `"#{controller_id}-target": 'fieldName'`
+- Chain actions with spaces: `action: "input->#{controller_id}#method1 change->#{controller_id}#method2"`
+
+### Error Handling
+
+- Errors are automatically displayed from form object validation
+- Use consistent error styling through the component's built-in error handling
+- The component adds `error` class to containers when validation fails
+
+### Grid Layouts
+
+Use CSS Grid classes for consistent form layouts:
+
+```erb
+<div class="grid grid-cols-2 gap-y-4 gap-x-8">
+  <div>
+    <%= render General::Input::Component.new(form: f, attribute: :first_name) %>
+  </div>
+  <div>
+    <%= render General::Input::Component.new(form: f, attribute: :last_name) %>
+  </div>
+</div>
+```
+
+### Conditional Fields
+
+Use Stimulus targets for showing/hiding fields based on other inputs:
+
+```erb
+<div data-<%= controller_id %>-target="conditionalField" class="hidden">
+  <%= render General::Input::Component.new(
+    form: f,
+    attribute: :other_delivery_system,
+    label: 'System name'
+  ) %>
+</div>
+```
+
+## Common Patterns to Avoid
+
+- Don't use raw Rails form helpers (`text_field`, `select`, etc.) in components
+- Don't duplicate validation logic in components - use form objects
+- Don't hardcode labels - use I18n or model attribute names
+- Don't mix different input component types in the same form without good reason
+- Don't forget to include `form: f` parameter when using within form_with blocks
+- Don't use `git add .` when committing - be specific about files to stage
+
+## Component Architecture
+
+### Input Component Hierarchy
+
+- `General::Input::Component` - Main component that delegates to specific types
+- `General::Input::TextField::Component` - Text input fields
+- `General::Input::Select::Component` - Dropdown selections
+- `General::Input::TextArea::Component` - Multi-line text areas
+- `General::Input::RadioButtons::Component` - Radio button groups
+- `General::Input::CheckBox::Component` - Individual checkboxes
+- `General::Input::DatePicker::Component` - Date selection
+- `General::Input::DateTimePicker::Component` - DateTime selection
+
+### Automatic Type Detection
+
+The main component automatically detects input type based on:
+
+- `as` parameter (explicit type specification)
+- Attribute type from model (date, datetime, text, etc.)
+- Presence of `collection` parameter (selects)
+- Form object attribute configuration
+
+### Error Display
+
+- Validation errors are automatically shown below inputs
+- Error styling is applied through CSS classes
+- Icon indicators appear for fields with errors
+- Error messages come from form object validation

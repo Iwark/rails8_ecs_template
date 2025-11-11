@@ -13,7 +13,12 @@ class ApplicationJob < ActiveJob::Base
                     server: :log
                   }
 
-  def logger
-    Sidekiq.logger
+  delegate :logger, to: :Sidekiq
+
+  protected
+
+  def capture_exception(exception, extra: {})
+    Rails.logger.error "Error: #{exception.message}, #{extra.inspect}"
+    Sentry.capture_exception(exception, extra:)
   end
 end

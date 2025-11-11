@@ -1,5 +1,5 @@
 # == base
-FROM ruby:3.3.6-slim-bullseye AS base
+FROM ruby:3.4.5-slim-bullseye AS base
 
 WORKDIR /app
 
@@ -12,8 +12,9 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential \
   bash \
-  git && \
-  gem install bundler --no-document --version 2.5.23 && \
+  git \
+  libyaml-dev && \
+  gem install bundler --no-document --version 2.7.1 && \
   rm -rf /var/lib/apt/lists/*
 
 FROM base AS builder
