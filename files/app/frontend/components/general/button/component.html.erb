@@ -1,0 +1,6 @@
+<%= btn_tag do %>
+  <% if @icon.present? %>
+    <%= inline_svg_tag("icons/#{@icon}.svg", class: @icon_class) %>
+  <% end %>
+  <%= content %>
+<% end %>
