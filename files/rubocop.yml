@@ -13,15 +13,21 @@ AllCops:
     - "db/**/*"
     - "vendor/**/*"
     - "tmp/**/*"
+    - "public/**/*"
     - "lib/tasks/auto_annotate_models.rake"
     - "lib/monkey_patches/*"
+    - "script/**/*"
 Lint/EmptyBlock:
   Exclude:
     - "spec/factories/*"
 Metrics/ClassLength:
   Max: 120
 Metrics/ParameterLists:
+  Max: 6
   MaxOptionalParameters: 5
+Naming/PredicateMethod:
+  AllowedMethods:
+    - save
 Rails/UnknownEnv:
   Environments:
     - development
@@ -54,6 +60,10 @@ RSpec/VariableName:
   Exclude:
     - "spec/requests/**/*"
     - "spec/system/**/*"
+Rails/Exit:
+  Exclude:
+    - "spec/rails_helper.rb"
+    - "spec/spec_helper.rb"
 Style/Documentation:
   Enabled: false
 Style/FrozenStringLiteralComment:
